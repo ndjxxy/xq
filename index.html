@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>学情诊断系统 - 教学数据实时收集与分析平台</title>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@master/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fb; --card:#ffffff; --ink:#1c2333; --ink2:#5a6478; --line:#e3e8f2;
+  --pri:#3b5bdb; --pri2:#2f4ac2; --pri-soft:#eef2ff; --ok:#2f9e6e; --ok-soft:#e6f7ef;
+  --warn:#d97706; --warn-soft:#fef3e2; --bad:#d64545; --bad-soft:#fdeaea;
+  --radius:14px; --shadow:0 2px 10px rgba(28,35,51,.07);
+  font-size:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+header.appbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#3b5bdb,#7048e8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.05rem}
+.mode-badge{font-size:.75rem;padding:3px 10px;border-radius:999px;background:var(--pri-soft);color:var(--pri);font-weight:600}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+nav.tabs button{border:none;background:transparent;padding:8px 14px;border-radius:9px;color:var(--ink2);font-size:.92rem;cursor:pointer;font-family:inherit}
+nav.tabs button:hover{background:#f0f3fa;color:var(--ink)}
+nav.tabs button.on{background:var(--pri);color:#fff;font-weight:600}
+main{max-width:1120px;margin:0 auto;padding:20px 16px 60px}
+.view{display:none}
+.view.on{display:block}
+h2.pagetitle{font-size:1.35rem;margin:6px 0 4px}
+.subtitle{color:var(--ink2);font-size:.9rem;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:16px}
+.card h3{font-size:1.02rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--pri);display:inline-block}
+.btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:9px;padding:9px 16px;font-size:.92rem;cursor:pointer;font-family:inherit;transition:.15s;background:#eef1f8;color:var(--ink)}
+.btn:hover{filter:brightness(.96)}
+.btn.primary{background:var(--pri);color:#fff}
+.btn.primary:hover{background:var(--pri2)}
+.btn.ok{background:var(--ok);color:#fff}
+.btn.danger{background:var(--bad-soft);color:var(--bad)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink2)}
+.btn.sm{padding:5px 10px;font-size:.82rem;border-radius:7px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input[type=text],input[type=number],textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:.92rem;font-family:inherit;background:#fff;color:var(--ink);outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(59,91,219,.12)}
+textarea{resize:vertical;min-height:60px}
+label.f{display:block;font-size:.85rem;color:var(--ink2);margin:10px 0 5px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:760px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.spacer{flex:1}
+table.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+table.tbl th{background:#f7f9fd;color:var(--ink2);font-weight:600;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.tbl td{padding:9px 10px;border-bottom:1px solid #f0f3f9;vertical-align:middle}
+table.tbl tr:hover td{background:#fafbfe}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.76rem;font-weight:600}
+.pill.g{background:var(--ok-soft);color:var(--ok)}
+.pill.b{background:var(--pri-soft);color:var(--pri)}
+.pill.o{background:var(--warn-soft);color:var(--warn)}
+.pill.r{background:var(--bad-soft);color:var(--bad)}
+.pill.gray{background:#eef1f6;color:var(--ink2)}
+.statcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.statcard .v{font-size:1.7rem;font-weight:800;margin-top:4px}
+.statcard .l{font-size:.82rem;color:var(--ink2)}
+.statcard .s{font-size:.75rem;color:var(--ink2);margin-top:2px}
+.qitem{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:#fbfcff}
+.qitem .qhead{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.qnum{width:26px;height:26px;border-radius:8px;background:var(--pri);color:#fff;font-size:.85rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stemp{font-weight:600;font-size:.95rem;line-height:1.5;white-space:pre-wrap}
+.opts{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.optrow{display:flex;align-items:flex-start;gap:9px;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;cursor:pointer;background:#fff;transition:.12s;font-size:.92rem;line-height:1.45}
+.optrow:hover{border-color:#b9c6f0}
+.optrow.sel{border-color:var(--pri);background:var(--pri-soft)}
+.optrow .lt{width:24px;height:24px;border-radius:7px;background:#eef1f8;color:var(--ink2);font-weight:700;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.optrow.sel .lt{background:var(--pri);color:#fff}
+textarea.ansText{margin-top:10px}
+.kp-tag{display:inline-block;background:#f0eaff;color:#7048e8;font-size:.74rem;padding:2px 8px;border-radius:6px;font-weight:600}
+.charts-wrap svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--ink2);margin-top:8px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+details.exp{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:10px;background:#fbfcff}
+details.exp summary{cursor:pointer;font-weight:600;font-size:.88rem;color:var(--pri)}
+.toast{position:fixed;left:50%;bottom:36px;transform:translateX(-50%) translateY(20px);background:#232a3d;color:#fff;padding:11px 22px;border-radius:11px;font-size:.9rem;opacity:0;pointer-events:none;transition:.25s;z-index:999;max-width:86vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--bad)}
+.toast.ok{background:var(--ok)}
+.qrbox{display:flex;justify-content:center;padding:10px}
+.qrbox canvas,.qrbox img{border:8px solid #fff;border-radius:8px;box-shadow:var(--shadow)}
+.linkbox{display:flex;gap:8px;margin-top:10px}
+.linkbox input{flex:1;background:#f7f9fd;font-size:.85rem;color:var(--ink2)}
+.codechip{font-family:Consolas,Menlo,monospace;background:#232a3d;color:#8ef0c2;padding:10px 18px;border-radius:10px;font-size:1.25rem;font-weight:700;letter-spacing:2px;display:inline-block}
+.statline{display:flex;align-items:center;gap:10px;font-size:.86rem;color:var(--ink2);margin-top:8px}
+.statusdot{width:9px;height:9px;border-radius:50%;background:#b6bdc9;display:inline-block}
+.statusdot.live{background:var(--ok);animation:pulse 1.6s infinite}
+.statusdot.dead{background:var(--bad)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(47,158,110,.4)}50%{box-shadow:0 0 0 6px rgba(47,158,110,0)}}
+.subfeed{max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.subrow{display:flex;align-items:center;gap:10px;background:#f7f9fd;border-radius:9px;padding:8px 12px;font-size:.87rem;animation:slidein .3s}
+@keyframes slidein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.helpbox{font-size:.9rem;line-height:1.85;color:var(--ink)}
+.helpbox h4{margin:14px 0 6px;font-size:.98rem;color:var(--pri)}
+.helpbox li{margin:4px 0 4px 20px}
+.helpbox code{background:#eef1f8;border-radius:5px;padding:1px 6px;font-size:.85rem}
+.helpbox table{border-collapse:collapse;margin:8px 0;font-size:.85rem}
+.helpbox table td,.helpbox table th{border:1px solid var(--line);padding:6px 10px}
+/* 学生端 */
+.stu-wrap{max-width:640px;margin:0 auto}
+.stu-head{background:linear-gradient(135deg,#3b5bdb,#7048e8);color:#fff;border-radius:var(--radius);padding:22px 22px 18px;margin-bottom:16px}
+.stu-head h2{font-size:1.25rem}
+.stu-head p{opacity:.85;font-size:.85rem;margin-top:6px}
+/* 大屏宣讲 */
+#present{display:none;position:fixed;inset:0;background:#f7f9ff;z-index:200;flex-direction:column}
+#present.on{display:flex}
+.present-top{display:flex;align-items:center;gap:14px;padding:14px 28px;border-bottom:1px solid var(--line);background:#fff}
+.present-top .pt-title{font-weight:700;font-size:1.05rem}
+.present-top .pt-nav{margin-left:auto;display:flex;gap:8px;align-items:center;color:var(--ink2);font-size:.88rem}
+#present-stage{flex:1;display:flex;align-items:center;justify-content:center;padding:26px 40px;overflow:auto}
+.slide{width:100%;max-width:1180px}
+.slide h1{font-size:2rem;margin-bottom:8px}
+.slide .slide-sub{color:var(--ink2);font-size:1rem;margin-bottom:22px}
+.slide .bigcards{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+@media(max-width:900px){.slide .bigcards{grid-template-columns:repeat(2,1fr)}}
+.slide .bigcards .statcard{text-align:center;padding:22px 10px}
+.slide .bigcards .statcard .v{font-size:2.3rem}
+.qslide{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;align-items:start}
+@media(max-width:900px){.qslide{grid-template-columns:1fr}}
+.qslide .stemp{font-size:1.25rem}
+.qslide .ratebig{font-size:2.6rem;font-weight:800;margin:6px 0}
+footer.note{color:var(--ink2);font-size:.78rem;text-align:center;padding:18px}
+@media print{
+  header.appbar,nav.tabs,.no-print,footer.note,.toast{display:none!important}
+  body{background:#fff}
+  .card,.statcard{box-shadow:none;break-inside:avoid}
+  .view{display:none!important}.view.on{display:block!important}
+}
+</style>
+</head>
+<body>
+<header class="appbar">
+  <div class="brand"><div class="logo">析</div><span>学情诊断系统</span></div>
+  <span class="mode-badge" id="modeBadge">教师端</span>
+  <nav class="tabs" id="teacherNav">
+    <button data-v="v-quiz" class="on">📋 问卷管理</button>
+    <button data-v="v-publish">🚀 发布收集</button>
+    <button data-v="v-analysis">📊 统计分析</button>
+    <button data-v="v-help">❓ 使用说明</button>
+  </nav>
+  <nav class="tabs" id="studentNav" style="display:none">
+    <button class="on">🙋 学生答题</button>
+  </nav>
+</header>
+
+<main>
+  <!-- 教师端：问卷管理 -->
+  <section class="view on" id="v-quiz">
+    <h2 class="pagetitle">问卷管理</h2>
+    <div class="subtitle">创建、编辑、导入诊断问卷。问卷包含题目、选项、标准答案、分值与知识点标签，是后续统计与学情分析的基础。</div>
+    <div class="row" style="margin-bottom:16px">
+      <button class="btn primary" id="btnNewQuiz">＋ 新建问卷</button>
+      <button class="btn" id="btnImportQuiz">📂 导入问卷 JSON</button>
+      <button class="btn ghost" id="btnSampleQuiz">✨ 载入示例问卷</button>
+      <input type="file" id="quizFile" accept=".json" style="display:none">
+    </div>
+    <div class="card"><h3><span class="dot"></span>我的问卷</h3><div id="quizList"></div></div>
+  </section>
+
+  <!-- 教师端：问卷编辑 -->
+  <section class="view" id="v-edit">
+    <h2 class="pagetitle" id="editTitle">编辑问卷</h2>
+    <div class="subtitle">设置问卷标题与说明，逐题编辑题型、题干、选项、答案、分值与知识点标签。</div>
+    <div class="card">
+      <div class="grid2">
+        <div><label class="f">问卷标题 *</label><input type="text" id="qz-title" placeholder="如：第三章 函数单元学情前测"></div>
+        <div><label class="f">问卷说明</label><input type="text" id="qz-desc" placeholder="如：本问卷用于了解本章掌握情况，不计入成绩"></div>
+      </div>
+      <label class="f">题目列表</label>
+      <div id="qz-questions"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnAddQ">＋ 添加题目</button>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="btnCancelEdit">取消</button>
+        <button class="btn primary" id="btnSaveQuiz">💾 保存问卷</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 教师端：发布收集 -->
+  <section class="view" id="v-publish">
+    <h2 class="pagetitle">发布收集</h2>
+    <div class="subtitle">选择问卷并发布：系统创建云端收集频道，学生扫码（或用会话码）进入答题，答卷实时回传。</div>
+    <div class="card" id="pubSetup">
+      <h3><span class="dot"></span>① 选择问卷并发布</h3>
+      <div class="row">
+        <select id="pubQuizSel" style="flex:1;min-width:220px"></select>
+        <button class="btn primary" id="btnPublish">🚀 发布并创建收集频道</button>
+      </div>
+      <div class="statline"><label style="margin:0">部署地址（学生扫码打开的本系统网页链接，可在“使用说明”查看部署方法）：</label></div>
+      <input type="text" id="hostInput" placeholder="https://xxx.github.io/xxx/ —— 部署在云端时通常可自动识别；本地打开请留空，用会话码方式" style="margin-top:6px">
+    </div>
+    <div class="card" id="pubResult" style="display:none">
+      <h3><span class="dot"></span>② 发布成功 —— 学生入口</h3>
+      <div class="row" style="margin-bottom:12px">
+        <span class="pill b">会话码</span>
+        <span class="codechip" id="pubTopic">----</span>
+        <button class="btn sm" id="btnCopyTopic">复制会话码</button>
+        <div class="spacer"></div>
+        <label class="row" style="gap:6px;font-size:.85rem;color:var(--ink2)"><input type="radio" name="qrmode" value="small" checked> 小码（推荐）</label>
+        <label class="row" style="gap:6px;font-size:.85rem;color:var(--ink2)"><input type="radio" name="qrmode" value="full"> 全量码</label>
+      </div>
+      <div class="grid2">
+        <div>
+          <div class="qrbox" id="qrBox"></div>
+          <div class="statline" id="qrTip" style="justify-content:center">学生扫码即可进入答题</div>
+        </div>
+        <div>
+          <label class="f">答题链接（也可发送到班级群）</label>
+          <div class="linkbox"><input type="text" id="pubLink" readonly><button class="btn" id="btnCopyLink">复制</button></div>
+          <div class="helpbox" style="margin-top:14px;font-size:.84rem;line-height:1.7">
+            <b>两种学生进入方式：</b><br>
+            ① <b>扫码 / 链接</b>：已填写部署地址时，学生手机扫码直接进入答题页。<br>
+            ② <b>会话码</b>：学生打开本系统文件（微信/QQ传文件即可），选择「学生答题」，输入会话码即可自动获取问卷。<br>
+            <span id="pubMetaTip"></span>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn ok" id="btnOpenCollect">📡 打开实时收集面板</button>
+            <button class="btn ghost" id="btnRepubMeta">重新推送问卷到云端</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 教师端：实时收集 -->
+  <section class="view" id="v-collect">
+    <h2 class="pagetitle">实时收集面板</h2>
+    <div class="subtitle">学生提交的答卷通过云端频道实时推送到这里。收卷结束后进入「统计分析」。</div>
+    <div class="grid4" id="collectStats" style="margin-bottom:16px"></div>
+    <div class="card">
+      <h3><span class="dot"></span>接收状态
+        <span class="statusdot" id="wsDot"></span><span id="wsText" style="font-size:.85rem;color:var(--ink2)">未连接</span>
+        <div class="spacer"></div>
+        <button class="btn sm" id="btnPollNow">立即补拉</button>
+        <button class="btn sm" id="btnDemoData">🎭 生成模拟答卷</button>
+        <button class="btn sm danger" id="btnClearDemo">清除模拟数据</button>
+        <button class="btn sm ghost" id="btnStopRecv">停止接收</button>
+        <button class="btn sm primary" id="btnGoAnalysis">去统计分析 →</button>
+      </h3>
+      <div class="subfeed" id="subFeed"></div>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span>答卷数据管理</h3>
+      <div class="row">
+        <button class="btn" id="btnImportCode">📥 导入答卷码 / 粘贴 JSON</button>
+        <button class="btn" id="btnExportSession">💾 备份本次收集数据（JSON）</button>
+        <button class="btn ghost" id="btnClearSubs">🗑 清空答卷</button>
+      </div>
+      <input type="file" id="sessionFile" accept=".json" style="display:none">
+      <div id="importArea" style="display:none;margin-top:12px">
+        <textarea id="importText" placeholder="粘贴学生答卷码（如 AADQm3... ）或答卷 JSON 内容"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn primary sm" id="btnDoImport">导入</button></div>
+      </div>
+      <table class="tbl" id="subsTbl" style="margin-top:12px"><thead><tr>
+        <th>#</th><th>姓名</th><th>学号</th><th>班级</th><th>提交时间</th><th>来源</th><th></th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </section>
+
+  <!-- 教师端：统计分析 -->
+  <section class="view" id="v-analysis">
+    <h2 class="pagetitle">统计分析</h2>
+    <div class="subtitle">自动生成班级学情画像：整体概况、分数分布、题目正确率、知识点掌握度与学生个体诊断，可投影宣讲、可下载留存。</div>
+    <div class="card">
+      <div class="row">
+        <label style="font-size:.88rem;color:var(--ink2)">选择收集场次：</label>
+        <select id="anaSessionSel" style="flex:1;min-width:240px"></select>
+        <button class="btn" id="btnImportSession">📂 导入备份 JSON</button>
+        <button class="btn ghost" id="btnRefreshAna">🔄 刷新分析</button>
+      </div>
+      <input type="file" id="anaSessionFile" accept=".json" style="display:none">
+    </div>
+    <div id="anaBody"></div>
+  </section>
+
+  <!-- 使用说明 -->
+  <section class="view" id="v-help">
+    <h2 class="pagetitle">使用说明 · 需求说明书</h2>
+    <div class="subtitle">本页包含系统的完整功能说明与教学使用流程。</div>
+    <div class="card helpbox" id="helpBody"></div>
+  </section>
+
+  <!-- 学生端 -->
+  <section class="view" id="v-student">
+    <div class="stu-wrap" id="stuBody"></div>
+  </section>
+</main>
+
+<!-- 大屏宣讲 -->
+<div id="present">
+  <div class="present-top no-print">
+    <div class="pt-title">📊 学情宣讲</div>
+    <div class="pt-nav">
+      <span id="slideInfo">1 / 1</span>
+      <button class="btn sm" id="pfPrev">◀ 上一页</button>
+      <button class="btn sm" id="pfNext">下一页 ▶</button>
+      <button class="btn sm ghost" id="pfFull">⛶ 全屏</button>
+      <button class="btn sm danger" id="pfExit">退出宣讲</button>
+    </div>
+  </div>
+  <div id="present-stage"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+ * 学情诊断系统 —— 单文件交互系统
+ * 云端通道：ntfy.sh 公共频道（免注册，浏览器跨域直连）
+ *   学生提交 → POST https://ntfy.sh/<会话码>
+ *   教师接收 → WebSocket wss://ntfy.sh/<会话码>/ws 实时推送
+ *              + GET /json?poll=1&since=... 周期补拉（12h缓存）
+ * ================================================================ */
+'use strict';
+
+/* ---------- 基础工具 ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+function uid(n=8){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+function nowTs(){return Date.now()}
+function fmtTs(ts){const d=new Date(ts);return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+let toastTimer=null;
+function toast(msg,type=''){const t=$('#toast');t.textContent=msg;t.className='toast show '+type;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='toast',2600)}
+function download(name,content,mime='text/plain'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(["\uFEFF"+content],{type:mime+';charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function b64uEncode(str){const bytes=new TextEncoder().encode(str);let bin='';bytes.forEach(b=>bin+=String.fromCharCode(b));return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function b64uDecode(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const bin=atob(s);const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));return new TextDecoder().decode(bytes)}
+function copyText(txt){ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>toast('已复制','ok'),()=>fallbackCopy(txt));} else fallbackCopy(txt); }
+function fallbackCopy(txt){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('已复制','ok')}catch(e){toast('复制失败，请手动选择复制','err')}ta.remove();}
+
+/* ---------- 本地存储 ---------- */
+const LS={
+  get(k,def){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return def}},
+  set(k,v){localStorage.setItem(k,JSON.stringify(v))},
+  del(k){localStorage.removeItem(k)}
+};
+let quizzes = LS.get('xq_quizzes',[]);
+let sessions = LS.get('xq_sessions',[]);
+let settings = LS.get('xq_settings',{host:''});
+function saveQuizzes(){LS.set('xq_quizzes',quizzes)}
+function saveSessions(){sessions=sessions.slice(-20);LS.set('xq_sessions',sessions)}
+function saveSettings(){LS.set('xq_settings',settings)}
+
+/* ---------- 问卷数据模型 ---------- */
+const QTYPES={single:'单选题',multi:'多选题',judge:'判断题',text:'简答题'};
+const QLETTERS=['A','B','C','D','E','F'];
+function normalizeQuiz(q){
+  q.id=q.id||uid(10); q.title=q.title||'未命名问卷'; q.desc=q.desc||'';
+  q.questions=(q.questions||[]).map(qq=>({
+    id:qq.id||uid(6),
+    type:QTYPES[qq.type]?qq.type:'single',
+    stem:qq.stem||'',
+    options:(qq.type==='judge')?['正确','错误']:(qq.options||[]).slice(0,6),
+    answer:(qq.type==='judge')?(qq.answer==='F'?'F':'T'):String(qq.answer||'').replace(/[^A-F]/g,'').split('').sort().join(''),
+    score:(+qq.score>0)?+qq.score:2,
+    kp:qq.kp||''
+  }));
+  return q;
+}
+function quizFullScore(q){return q.questions.filter(x=>x.type!=='text').reduce((s,x)=>s+x.score,0)}
+function sampleQuiz(){
+  return normalizeQuiz({title:'示例：第四章「平面直角坐标系」学情前测',desc:'用于课堂学情诊断演示，答题约需3分钟',
+    questions:[
+      {type:'single',stem:'平面直角坐标系中，点 P(-2, 3) 位于第几象限？',options:['第一象限','第二象限','第三象限','第四象限'],answer:'B',score:2,kp:'坐标与象限'},
+      {type:'single',stem:'点 A(3, -1) 到 x 轴的距离是（　）',options:['3','1','4','√10'],answer:'B',score:2,kp:'点到坐标轴距离'},
+      {type:'judge',stem:'点 (0, -5) 在 y 轴的正半轴上。',answer:'F',score:2,kp:'坐标轴上的点'},
+      {type:'multi',stem:'下列关于坐标的说法正确的有（　）',options:['原点不属于任何象限','x 轴上的点纵坐标为 0','(a, b) 与 (b, a) 表示同一点','平行于 x 轴的直线上所有点纵坐标相同'],answer:'ABD',score:3,kp:'坐标基本概念'},
+      {type:'single',stem:'将点 (2, 1) 先向左平移 3 个单位，再向上平移 2 个单位，得到的坐标是（　）',options:['(-1, 3)','(5, 3)','(-1, -1)','(5, -1)'],answer:'A',score:3,kp:'坐标与平移'},
+      {type:'text',stem:'用自己的话说一说：坐标系中「横坐标、纵坐标」分别表示什么？在生活中找一个可以用坐标描述位置的例子。',score:3,kp:'坐标概念表述'}
+    ]});
+}
+
+/* ---------- ntfy 云端通道 ---------- */
+const NT={
+  base:'https://ntfy.sh',
+  async pub(topic,obj){
+    const body=JSON.stringify(obj);
+    if(body.length>3800) throw new Error('消息过长，请精简问卷内容');
+    const res=await fetch(`${this.base}/${topic}`,{method:'POST',body});
+    if(!res.ok) throw new Error('频道推送失败 HTTP '+res.status);
+    return true;
+  },
+  ws:null, wsTopic:null,
+  connectWS(topic,onMsg,onStatus){
+    this.closeWS();
+    this.wsTopic=topic;
+    const open=()=>{
+      if(this.wsTopic!==topic)return;
+      let ws;
+      try{ ws=new WebSocket('wss://ntfy.sh/'+topic+'/ws'); }
+      catch(e){ onStatus('dead'); return; }
+      ws.onopen=()=>onStatus('live');
+      ws.onmessage=e=>{ try{const ev=JSON.parse(e.data); if(ev.event==='message') onMsg(ev);}catch(err){} };
+      ws.onclose=()=>{ onStatus('reconnect'); setTimeout(open,4000); };
+      ws.onerror=()=>{ try{ws.close()}catch(e){} };
+      this.ws=ws;
+    };
+    open();
+  },
+  closeWS(){ this.wsTopic=null; if(this.ws){const w=this.ws;this.ws=null;try{w.onclose=null;w.close()}catch(e){}} },
+  async poll(topic,since='all'){
+    const res=await fetch(`${this.base}/${topic}/json?poll=1&since=${encodeURIComponent(since)}`);
+    if(!res.ok) throw new Error('补拉失败 HTTP '+res.status);
+    const text=await res.text();
+    return text.split('\n').filter(Boolean).map(l=>{try{return JSON.parse(l)}catch(e){return null}}).filter(e=>e&&e.event==='message');
+  }
+};
+
+/* ---------- 视图路由 ---------- */
+const VIEWS=['v-quiz','v-edit','v-publish','v-collect','v-analysis','v-help','v-student'];
+let currentView='v-quiz';
+function show(v){
+  currentView=v;
+  VIEWS.forEach(id=>$('#'+id).classList.toggle('on',id===v));
+  const isStudent=v==='v-student';
+  $('#teacherNav').style.display=isStudent?'none':'flex';
+  $('#studentNav').style.display=isStudent?'flex':'none';
+  $('#modeBadge').textContent=isStudent?'学生端':'教师端';
+  $$('#teacherNav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v||(v==='v-collect'&&b.dataset.v==='v-publish')||(v==='v-edit'&&b.dataset.v==='v-quiz')));
+  if(v!=='v-collect'&&recvState.active) stopRecv();
+  window.scrollTo(0,0);
+}
+$$('#teacherNav button').forEach(b=>b.addEventListener('click',()=>{
+  const v=b.dataset.v;
+  if(v==='v-publish'){renderPublishSelect();show('v-publish')}
+  else if(v==='v-analysis'){renderAnaSelect();show('v-analysis')}
+  else show(v);
+}));
+
+/* ================================================================
+ * 教师端 —— 问卷管理
+ * ================================================================ */
+function renderQuizList(){
+  const box=$('#quizList');
+  if(!quizzes.length){box.innerHTML='<div style="color:var(--ink2);font-size:.9rem;padding:6px 0">还没有问卷。点击「新建问卷」创建，或「载入示例问卷」快速体验。</div>';return}
+  box.innerHTML=quizzes.map(q=>{
+    const auto=q.questions.filter(x=>x.type!=='text').length, txt=q.questions.length-auto;
+    return `<div class="qitem" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div class="stemp">${esc(q.title)}</div>
+        <div style="color:var(--ink2);font-size:.82rem;margin-top:4px">${q.desc?esc(q.desc)+'　':' '}共 ${q.questions.length} 题（客观题 ${auto} · 简答 ${txt}）· 客观题满分 ${quizFullScore(q)} 分 · 更新于 ${fmtTs(q.updatedAt||nowTs())}</div>
+      </div>
+      <div class="row">
+        <button class="btn sm primary" onclick="startEdit('${q.id}')">编辑</button>
+        <button class="btn sm" onclick="quickPublish('${q.id}')">发布</button>
+        <button class="btn sm ghost" onclick="exportQuiz('${q.id}')">导出</button>
+        <button class="btn sm danger" onclick="deleteQuiz('${q.id}')">删除</button>
+      </div></div>`;
+  }).join('');
+}
+$('#btnNewQuiz').onclick=()=>{editingId=null;$('#editTitle').textContent='新建问卷';$('#qz-title').value='';$('#qz-desc').value='';editQuestions=[{id:uid(6),type:'single',stem:'',options:['','','',''],answer:'A',score:2,kp:''}];renderEditQuestions();show('v-edit')};
+$('#btnSampleQuiz').onclick=()=>{quizzes.push({...sampleQuiz(),updatedAt:nowTs()});saveQuizzes();renderQuizList();toast('示例问卷已载入','ok')};
+$('#btnImportQuiz').onclick=()=>$('#quizFile').click();
+$('#quizFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const obj=JSON.parse(r.result); const q=normalizeQuiz(Array.isArray(obj)?{title:'导入问卷',questions:obj}:obj);
+    q.updatedAt=nowTs();quizzes.push(q);saveQuizzes();renderQuizList();toast('问卷「'+q.title+'」导入成功','ok');
+  }catch(err){toast('导入失败：'+err.message,'err')}};
+  r.readAsText(f);e.target.value='';
+};
+function exportQuiz(id){const q=quizzes.find(x=>x.id===id);if(!q)return;download(`${q.title}-问卷.json`,JSON.stringify(q,null,2),'application/json');toast('问卷 JSON 已下载','ok')}
+function deleteQuiz(id){
+  const q=quizzes.find(x=>x.id===id);if(!q)return;
+  if(!confirm(`确定删除问卷「${q.title}」？已发布场次不受影响。`))return;
+  quizzes=quizzes.filter(x=>x.id!==id);saveQuizzes();renderQuizList();toast('已删除');
+}
+
+/* ---------- 问卷编辑 ---------- */
+let editingId=null, editQuestions=[];
+function startEdit(id){
+  const q=quizzes.find(x=>x.id===id);if(!q)return;
+  editingId=id;$('#editTitle').textContent='编辑问卷';
+  $('#qz-title').value=q.title;$('#qz-desc').value=q.desc;
+  editQuestions=JSON.parse(JSON.stringify(q.questions));
+  renderEditQuestions();show('v-edit');
+}
+function renderEditQuestions(){
+  const box=$('#qz-questions');
+  box.innerHTML=editQuestions.map((q,i)=>{
+    const needOpts=q.type!=='judge';
+    let optHtml='';
+    if(needOpts){
+      optHtml=`<label class="f">选项（每行一个，最多6个）</label>
+      <div id="opt-${i}" style="display:flex;flex-direction:column;gap:7px">`+
+      q.options.map((o,j)=>`<div class="row" style="flex-wrap:nowrap"><span class="qnum" style="background:#eef1f8;color:var(--ink2)">${QLETTERS[j]}</span><input type="text" data-qi="${i}" data-oi="${j}" class="optInput" value="${esc(o)}" placeholder="选项 ${QLETTERS[j]}">${needOpts&&q.options.length>2?`<button class="btn sm ghost" onclick="delOpt(${i},${j})">✕</button>`:''}</div>`).join('')+
+      (q.options.length<6?`<button class="btn sm ghost" onclick="addOpt(${i})" style="align-self:flex-start">＋ 加一个选项</button>`:'')+`</div>`;
+    }
+    const ansHtml = q.type==='text' ? `<div style="color:var(--ink2);font-size:.83rem;margin-top:6px">简答题不自动评分，提交后在「批改」中人工给分。</div>`
+      : needOpts ? `<label class="f">正确答案（多选题可点多个字母）</label><div class="row" id="ans-${i}">${q.options.map((o,j)=>`<button class="btn sm ${String(q.answer||'').includes(QLETTERS[j])?'primary':''}" onclick="toggleAns(${i},${j})">${QLETTERS[j]}</button>`).join('')}</div>`
+      : `<label class="f">正确答案</label><div class="row" id="ans-${i}"><button class="btn sm ${q.answer==='T'?'primary':''}" onclick="setJudge(${i},'T')">正确</button><button class="btn sm ${q.answer==='F'?'primary':''}" onclick="setJudge(${i},'F')">错误</button></div>`;
+    return `<div class="qitem">
+      <div class="qhead"><span class="qnum">${i+1}</span>
+        <select data-qi="${i}" class="qType" style="width:120px">
+          ${Object.entries(QTYPES).map(([k,v])=>`<option value="${k}" ${q.type===k?'selected':''}>${v}</option>`).join('')}
+        </select>
+        <span class="kp-tag">${q.kp?esc(q.kp):'未设知识点'}</span>
+        <div class="spacer"></div>
+        ${i>0?`<button class="btn sm ghost" onclick="moveQ(${i},-1)">↑</button>`:''}
+        ${i<editQuestions.length-1?`<button class="btn sm ghost" onclick="moveQ(${i},1)">↓</button>`:''}
+        <button class="btn sm danger" onclick="delQ(${i})">删除本题</button>
+      </div>
+      <label class="f">题干</label><textarea data-qi="${i}" class="qStem" placeholder="输入题目内容">${esc(q.stem)}</textarea>
+      ${optHtml}${ansHtml}
+      <div class="grid2" style="margin-top:4px">
+        <div><label class="f">分值（分）</label><input type="number" min="1" max="50" data-qi="${i}" class="qScore" value="${q.score}"></div>
+        <div><label class="f">知识点标签（用于掌握度分析）</label><input type="text" data-qi="${i}" class="qKp" value="${esc(q.kp)}" placeholder="如：坐标与象限"></div>
+      </div></div>`;
+  }).join('');
+  // 绑定事件
+  $$('#qz-questions .qType').forEach(s=>s.onchange=()=>{const i=+s.dataset.qi;const t=s.value;const old=editQuestions[i];
+    editQuestions[i]={...old,type:t,options:t==='judge'?['正确','错误']:(old.options.length?t.options:['','','','']),answer:t==='judge'?(old.answer==='F'?'F':'T'):(t==='text'?'':old.answer),stem:old.stem,score:old.score,kp:old.kp};
+    renderEditQuestions();});
+  $$('#qz-questions .qStem').forEach(t=>t.oninput=()=>{editQuestions[+t.dataset.qi].stem=t.value});
+  $$('#qz-questions .qScore').forEach(t=>t.oninput=()=>{editQuestions[+t.dataset.qi].score=+t.value||1});
+  $$('#qz-questions .qKp').forEach(t=>t.oninput=()=>{editQuestions[+t.dataset.qi].kp=t.value});
+  $$('#qz-questions .optInput').forEach(t=>t.oninput=()=>{editQuestions[+t.dataset.qi].options[+t.dataset.oi]=t.value});
+}
+function addOpt(i){if(editQuestions[i].options.length<6){editQuestions[i].options.push('');renderEditQuestions()}}
+function delOpt(i,j){if(editQuestions[i].options.length>2){const q=editQuestions[i];const rm=QLETTERS[j];q.options.splice(j,1);q.answer=String(q.answer||'').split('').filter(c=>c!==rm).join('');renderEditQuestions()}}
+function toggleAns(i,j){const q=editQuestions[i];const L=QLETTERS[j];
+  if(q.type==='single'){q.answer=L}else{const set=new Set(String(q.answer||'').split(''));set.has(L)?set.delete(L):set.add(L);q.answer=[...set].sort().join('')}
+  renderEditQuestions();}
+function setJudge(i,v){editQuestions[i].answer=v;renderEditQuestions()}
+function addQ(){editQuestions.push({id:uid(6),type:'single',stem:'',options:['','','',''],answer:'A',score:2,kp:''});renderEditQuestions();const items=$$('#qz-questions .qitem');if(items.length)items[items.length-1].scrollIntoView({behavior:'smooth'})}
+function delQ(i){if(editQuestions.length<=1){toast('至少保留一道题','err');return}editQuestions.splice(i,1);renderEditQuestions()}
+function moveQ(i,d){const arr=editQuestions,t=arr[i];arr[i]=arr[i+d];arr[i+d]=t;renderEditQuestions()}
+$('#btnAddQ').onclick=addQ;
+$('#btnCancelEdit').onclick=()=>show('v-quiz');
+$('#btnSaveQuiz').onclick=()=>{
+  const title=$('#qz-title').value.trim();
+  if(!title){toast('请填写问卷标题','err');return}
+  for(let i=0;i<editQuestions.length;i++){
+    const q=editQuestions[i];
+    if(!q.stem.trim()){toast(`第 ${i+1} 题题干不能为空`,'err');return}
+    if(q.type!=='text'){
+      if(q.type!=='judge'&&(q.options.length<2||q.options.some(o=>!o.trim()))){toast(`第 ${i+1} 题选项不能为空`,'err');return}
+      if(!q.answer){toast(`第 ${i+1} 题未设置正确答案`,'err');return}
+    }
+  }
+  const data=normalizeQuiz({id:editingId||undefined,title,desc:$('#qz-desc').value.trim(),questions:editQuestions,updatedAt:nowTs()});
+  if(editingId){const ix=quizzes.findIndex(x=>x.id===editingId);quizzes[ix]=data}
+  else quizzes.push(data);
+  saveQuizzes();renderQuizList();toast('问卷已保存','ok');show('v-quiz');
+};
+
+/* ================================================================
+ * 教师端 —— 发布收集（含云端频道）
+ * ================================================================ */
+let curSession=null; // {topic, quizId, quiz, publishedAt, subs:[], lastTs, name}
+function renderPublishSelect(){
+  const sel=$('#pubQuizSel');
+  if(!quizzes.length){sel.innerHTML='<option value="">—— 请先在「问卷管理」创建问卷 ——</option>';return}
+  sel.innerHTML=quizzes.map(q=>`<option value="${q.id}">${esc(q.title)}（${q.questions.length}题）</option>`).join('');
+  $('#hostInput').value=settings.host||'';
+}
+$('#btnPublish').onclick=async()=>{
+  const qid=$('#pubQuizSel').value;
+  const quiz=quizzes.find(x=>x.id===qid);
+  if(!quiz){toast('请先选择或创建问卷','err');return}
+  settings.host=$('#hostInput').value.trim();saveSettings();
+  const topic='wbxq'+uid(6).toLowerCase();
+  const btn=$('#btnPublish');btn.disabled=true;btn.textContent='正在创建云端频道…';
+  try{
+    await publishMeta(topic,quiz);
+    curSession={topic,quizId:quiz.id,quiz:JSON.parse(JSON.stringify(quiz)),publishedAt:nowTs(),subs:[],lastTs:0,name:quiz.title};
+    sessions.push(curSession);saveSessions();
+    $('#pubResult').style.display='block';
+    $('#pubTopic').textContent=topic;
+    $('#pubMetaTip').textContent='问卷已推送到云端频道，学生端可自动获取。';
+    renderPubQR();startRecv(curSession);
+    toast('发布成功！收集频道已创建','ok');
+    // 发布自检：2 秒后模拟学生拉取问卷，失败则预警
+    setTimeout(async()=>{
+      try{
+        const chk=await fetchMetaByTopic(topic);
+        if(chk&&chk.questions.length){$('#pubMetaTip').innerHTML='✅ 问卷已推送到云端频道，学生端可自动获取。<span style="color:var(--ok)">（自检通过：已能从云端取回问卷）</span>';}
+        else throw new Error('云端返回为空');
+      }catch(err){
+        $('#pubMetaTip').innerHTML='<span style="color:var(--warn)">⚠ 自检未通过（'+esc(String(err.message||err)).slice(0,60)+'…）：学生扫码可能暂时取不到问卷。可点下方「重新推送问卷」，或让学生稍后重试。</span>';
+      }
+    },2000);
+  }catch(e){
+    // 通道失败 → 全量码兜底
+    curSession={topic,quizId:quiz.id,quiz:JSON.parse(JSON.stringify(quiz)),publishedAt:nowTs(),subs:[],lastTs:0,name:quiz.title,offline:true};
+    sessions.push(curSession);saveSessions();
+    $('#pubResult').style.display='block';
+    $('#pubTopic').textContent=topic;
+    $('#pubMetaTip').innerHTML='<span style="color:var(--warn)">⚠ 云端频道创建失败（网络原因）。会话码方式暂不可用，请改用「全量码」或引导学生使用答卷码回传。</span>';
+    renderPubQR();startRecv(curSession);
+    toast('云端频道创建失败，已启用离线兜底方案','err');
+  }
+  btn.disabled=false;btn.textContent='🚀 发布并创建收集频道';
+};
+async function publishMeta(topic,quiz){
+  const body=JSON.stringify({t:'meta',qid:quiz.id,quiz});
+  if(body.length<3500){await NT.pub(topic,{t:'meta',qid:quiz.id,quiz});return 1}
+  const qs=JSON.stringify(quiz),n=Math.ceil(qs.length/2800);
+  for(let i=0;i<n;i++)await NT.pub(topic,{t:'metaC',qid:quiz.id,i,n,c:qs.slice(i*2800,(i+1)*2800)});
+  return n;
+}
+$('#btnRepubMeta').onclick=async()=>{
+  if(!curSession)return;
+  try{await publishMeta(curSession.topic,curSession.quiz);toast('问卷已重新推送到云端','ok')}
+  catch(e){toast('推送失败：'+e.message,'err')}
+};
+function buildLink(mode){
+  const host=$('#hostInput').value.trim()||settings.host||'';
+  if(!host)return {link:'',host:false};
+  const t=curSession.topic;
+  if(mode==='small')return {link:host+'#c='+t,host:true};
+  const payload=b64uEncode(JSON.stringify({t,quiz:curSession.quiz}));
+  return {link:host+'#p='+payload,host:true};
+}
+function renderPubQR(){
+  const mode=$('input[name=qrmode]:checked').value;
+  const box=$('#qrBox'),tip=$('#qrTip'),linkInput=$('#pubLink');
+  if(mode==='full'){
+    const {link,host}=buildLink('full');
+    if(!host){box.innerHTML='';tip.textContent='请先填写部署地址';linkInput.value='';return}
+    linkInput.value=link;
+    if(link.length>2300){tip.innerHTML='<span style="color:var(--warn)">链接过长，二维码可能难以扫描，建议用「小码」或直接发链接</span>'}
+    else tip.textContent='全量码：问卷随链接携带，不依赖云端频道';
+    makeQR(box,link);
+  }else{
+    const {link,host}=buildLink('small');
+    if(!host){
+      box.innerHTML=`<div style="text-align:center;color:var(--ink2);font-size:.88rem;padding:30px 10px">
+        <div style="font-size:2rem;margin-bottom:10px">📱</div>
+        未填写部署地址，无法生成扫码二维码。<br>请引导学生使用 <b>会话码</b> 进入答题，<br>或填写部署地址后重新生成。</div>`;
+      tip.textContent='会话码方式：学生打开本系统文件 → 学生答题 → 输入会话码';
+      linkInput.value='';return;
+    }
+    linkInput.value=link;
+    tip.textContent=curSession.offline?'⚠ 云端频道异常，学生扫码后将无法获取问卷':'学生扫码即可进入答题';
+    makeQR(box,link);
+  }
+}
+$$('input[name=qrmode]').forEach(r=>r.addEventListener('change',()=>{if(curSession)renderPubQR()}));
+function makeQR(box,text){
+  box.innerHTML='';
+  if(!window.QRCode){box.innerHTML='<div style="color:var(--warn);font-size:.85rem;text-align:center;padding:30px 10px">二维码组件加载失败（需联网）。<br>请复制下方链接发送给学生。</div>';return}
+  try{new QRCode(box,{text,width:250,height:250,correctLevel:QRCode.CorrectLevel.M})}catch(e){box.innerHTML='<div style="color:var(--bad);font-size:.85rem">二维码生成失败：链接过长</div>'}
+}
+$('#btnCopyTopic').onclick=()=>copyText($('#pubTopic').textContent);
+$('#btnCopyLink').onclick=()=>copyText($('#pubLink').value);
+$('#btnOpenCollect').onclick=()=>{renderCollect();show('v-collect')};
+function quickPublish(id){renderPublishSelect();$('#pubQuizSel').value=id;show('v-publish');toast('已选中问卷，点击「发布并创建收集频道」继续');}
+
+/* ================================================================
+ * 教师端 —— 实时收集
+ * ================================================================ */
+const recvState={active:false,timer:null,session:null};
+function startRecv(session){
+  recvState.session=session;recvState.active=true;
+  $('#btnStopRecv')&&($('#btnStopRecv').textContent='停止接收');
+  NT.connectWS(session.topic,ev=>onNtfyEvent(session,ev),st=>{
+    const dot=$('#wsDot'),txt=$('#wsText');
+    if(!dot)return;
+    if(st==='live'){dot.className='statusdot live';txt.textContent='云端实时推送已连接';}
+    else if(st==='reconnect'){dot.className='statusdot dead';txt.textContent='连接断开，正在自动重连…（周期补拉兜底中）';}
+    else{dot.className='statusdot dead';txt.textContent='未连接';}
+  });
+  clearInterval(recvState.timer);
+  recvState.timer=setInterval(()=>pollCatch(session),9000);
+  pollCatch(session,true);
+}
+function stopRecv(){
+  recvState.active=false;clearInterval(recvState.timer);
+  NT.closeWS();
+  const dot=$('#wsDot'),txt=$('#wsText');
+  if(dot){dot.className='statusdot';txt.textContent='已停止接收';}
+  const b=$('#btnStopRecv');if(b)b.textContent='恢复接收';
+}
+async function pollCatch(session,first=false){
+  if(!session)return;
+  try{
+    const since=first?'all':(session.lastTs?(''+Math.max(0,session.lastTs-1)):'all');
+    const evs=await NT.poll(topicOf(session),since);
+    let n=0;
+    evs.forEach(ev=>{if(onNtfyEvent(session,ev))n++});
+    if(first&&evs.length)renderCollect();
+  }catch(e){/* 静默，等下一轮 */}
+}
+function topicOf(s){return s.topic}
+function onNtfyEvent(session,ev){
+  if(!ev||typeof ev.message!=='string')return false;
+  if(ev.time&&ev.time>session.lastTs)session.lastTs=ev.time;
+  let payload=null;try{payload=JSON.parse(ev.message)}catch(e){return false}
+  if(!payload||payload.t!=='ans'||payload.qid!==session.quizId)return false;
+  const sub={id:payload.id||uid(10),name:String(payload.name||'未署名').slice(0,20),cls:String(payload.cls||'').slice(0,20),sid:String(payload.sid||'').slice(0,20),ans:payload.ans||[],ts:payload.ts||nowTs(),demo:!!payload.demo};
+  // 同一学号/姓名重复提交 → 保留最新
+  const ix=session.subs.findIndex(s=>(s.sid&&s.sid===sub.sid&&s.sid!=='')||(s.name===sub.name&&!s.sid&&!sub.sid));
+  if(ix>=0){session.subs[ix]=sub;toast(`已收到 ${sub.name} 更新的答卷（自动覆盖旧卷）`)}
+  else{session.subs.push(sub);toast(`📥 收到 ${sub.name} 的答卷（第 ${session.subs.length} 份）`,'ok')}
+  saveSessions();
+  if(currentView==='v-collect')renderCollect();
+  if(currentView==='v-analysis'&&$('#anaSessionSel').value===sessionKey(session))renderAnalysis();
+  return true;
+}
+function sessionKey(s){return s.topic}
+function renderCollectStats(){
+  const s=recvState.session||curSession;if(!s)return;
+  const a=analyze(s.quiz,s.subs);
+  const items=[
+    ['已收答卷',a.n+' 份',''],
+    ['班级平均分',a.n?a.overview.avg+' 分':`满分 ${quizFullScore(s.quiz)} 分`,'得分率 '+(a.n?a.overview.avgRate+'%':'—')],
+    ['及格率',a.n?a.overview.passRate+'%':'—','≥60%得分率'],
+    ['优秀率',a.n?a.overview.excelRate+'%':'—','≥85%得分率'],
+  ];
+  $('#collectStats').innerHTML=items.map(([l,v,sm])=>`<div class="statcard"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sm}</div></div>`).join('');
+}
+function renderCollect(){
+  const s=recvState.session||curSession;if(!s)return;
+  renderCollectStats();
+  const feed=$('#subFeed');
+  const recent=[...s.subs].sort((a,b)=>b.ts-a.ts).slice(0,30);
+  feed.innerHTML=recent.length?recent.map(x=>`<div class="subrow">📥 <b>${esc(x.name)}</b><span style="color:var(--ink2)">${x.cls?esc(x.cls)+' · ':''}${x.sid?'学号 '+esc(x.sid)+' · ':''}${fmtTs(x.ts)}</span><div class="spacer"></div><span class="pill ${x.demo?'o':'g'}">${x.demo?'模拟':'实时回传'}</span></div>`).join('')
+    :'<div style="color:var(--ink2);font-size:.88rem;padding:8px">暂无答卷。把会话码或二维码提供给学生，提交后这里会实时刷新。</div>';
+  const tb=$('#subsTbl tbody');
+  tb.innerHTML=[...s.subs].sort((a,b)=>b.ts-a.ts).map((x,i)=>`<tr>
+    <td>${i+1}</td><td>${esc(x.name)}</td><td>${esc(x.sid)||'—'}</td><td>${esc(x.cls)||'—'}</td><td>${fmtTs(x.ts)}</td>
+    <td><span class="pill ${x.demo?'o':'b'}">${x.demo?'模拟数据':'云端回传'}</span></td>
+    <td><button class="btn sm danger" onclick="delSub('${x.id}')">删除</button></td></tr>`).join('');
+  $('#btnStopRecv').textContent=recvState.active?'停止接收':'恢复接收';
+}
+function delSub(id){const s=recvState.session||curSession;if(!s)return;s.subs=s.subs.filter(x=>x.id!==id);saveSessions();renderCollect();toast('已删除该答卷')}
+$('#btnStopRecv').onclick=()=>{if(recvState.active)stopRecv();else if(recvState.session)startRecv(recvState.session)};
+$('#btnPollNow').onclick=()=>{pollCatch(recvState.session||curSession,true);toast('已补拉云端消息')};
+$('#btnGoAnalysis').onclick=()=>{renderAnaSelect();show('v-analysis')};
+$('#btnClearSubs').onclick=()=>{
+  const s=recvState.session||curSession;if(!s)return;
+  if(!confirm(`清空「${s.name}」的全部 ${s.subs.length} 份答卷？此操作不可恢复（建议先备份）。`))return;
+  s.subs=[];saveSessions();renderCollect();toast('已清空');
+};
+$('#btnExportSession').onclick=()=>{
+  const s=recvState.session||curSession;if(!s)return;
+  download(`${s.name}-收集数据-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify({type:'xueqing-session',topic:s.topic,quizId:s.quizId,quiz:s.quiz,publishedAt:s.publishedAt,subs:s.subs},null,2),'application/json');
+  toast('收集数据已备份下载','ok');
+};
+$('#btnImportCode').onclick=()=>{const a=$('#importArea');a.style.display=a.style.display==='none'?'block':'none'};
+$('#btnDoImport').onclick=()=>{
+  const s=recvState.session||curSession;if(!s)return;
+  const txt=$('#importText').value.trim();if(!txt){toast('请粘贴内容','err');return}
+  txt.split(/\n+/).map(x=>x.trim()).filter(Boolean).forEach(line=>{
+    try{
+      let obj;
+      try{obj=JSON.parse(line)}catch(e){obj=JSON.parse(b64uDecode(line))}
+      if(obj.t!=='ans'&&obj.ans===undefined)throw new Error('不是答卷数据');
+      const sub={id:obj.id||uid(10),name:String(obj.name||'未署名'),cls:String(obj.cls||''),sid:String(obj.sid||''),ans:obj.ans||[],ts:obj.ts||nowTs(),demo:false};
+      const ix=s.subs.findIndex(x=>x.sid&&x.sid===sub.sid);
+      if(ix>=0)s.subs[ix]=sub;else s.subs.push(sub);
+    }catch(e){toast('有一段内容无法解析为答卷（可能是复制不完整）','err')}
+  });
+  $('#importText').value='';$('#importArea').style.display='none';
+  saveSessions();renderCollect();toast('导入完成','ok');
+};
+$('#sessionFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const obj=JSON.parse(r.result);
+      if(obj.type!=='xueqing-session'||!obj.quiz)throw new Error('不是本系统的收集备份文件');
+      const s={topic:obj.topic||uid(8).toLowerCase(),quizId:obj.quiz.id,quiz:obj.quiz,publishedAt:obj.publishedAt||nowTs(),subs:obj.subs||[],lastTs:0,name:obj.quiz.title};
+      sessions.push(s);saveSessions();
+      curSession=s;startRecv(s);renderCollect();toast('备份已恢复，可继续收集与分析','ok');
+    }catch(err){toast('导入失败：'+err.message,'err')}
+  };
+  r.readAsText(f);e.target.value='';
+};
+$('#btnClearDemo').onclick=()=>{
+  const s=recvState.session||curSession;if(!s)return;
+  const before=s.subs.length;s.subs=s.subs.filter(x=>!x.demo);
+  saveSessions();renderCollect();toast(`已清除 ${before-s.subs.length} 份模拟答卷`);
+};
+
+/* ---------- 模拟答卷生成 ---------- */
+const DEMO_NAMES=['王小雨','李昊然','张思琪','刘俊杰','陈欣怡','赵天宇','孙嘉禾','周子墨','吴雅婷','郑一鸣','冯晓彤','蒋浩然','韩梦瑶','杨博文','朱佳琳','秦子涵','许志远','何雨欣','吕星辰','施雅静','张启铭','高梓萱','林晨曦','罗一诺','梁静怡','宋文博','唐语嫣','韩振宇','曹诗涵','袁浩宇'];
+$('#btnDemoData').onclick=()=>{
+  const s=recvState.session||curSession;if(!s)return;
+  const n=+prompt('生成多少份模拟答卷？（用于课堂演示与宣讲预演）','28')||0;
+  if(n<=0)return;
+  const nq=s.quiz.questions.length;
+  const autoIdx=s.quiz.questions.map((q,i)=>i).filter(i=>s.quiz.questions[i].type!=='text');
+  const kpBase={};
+  autoIdx.forEach(i=>{const kp=s.quiz.questions[i].kp||'综合';if(!(kp in kpBase))kpBase[kp]=0.45+Math.random()*0.45});
+  for(let k=0;k<n;k++){
+    const ability=0.35+Math.random()*0.6;
+    const ans=s.quiz.questions.map((q,i)=>{
+      if(q.type==='text')return i%3===0?'横坐标表示左右方向的位置，纵坐标表示前后方向的位置，比如教室座位可以用第几列第几排表示。':(i%3===1?'横的是x，竖的是y，电影票的排号和座号就是坐标。':'不知道怎么表述。');
+      const kp=q.kp||'综合';const p=Math.min(0.97,kpBase[kp]*0.5+ability*0.65);
+      if(Math.random()<p)return q.type==='multi'?q.answer:(Math.random()<0.92?q.answer:(q.options[0]===undefined?(Math.random()<0.5?'T':'F'):QLETTERS[Math.floor(Math.random()*q.options.length)]));
+      // 错误答案
+      if(q.type==='judge')return q.answer==='T'?'F':'T';
+      if(q.type==='multi'){const wrong=['A','B','C','D'].filter(c=>!q.answer.includes(c));return wrong.length?wrong[0]:q.answer}
+      const wrongL=QLETTERS.slice(0,q.options.length).filter(c=>c!==q.answer);
+      return wrongL[Math.floor(Math.random()*wrongL.length)];
+    });
+    s.subs.push({id:uid(10),name:DEMO_NAMES[k%DEMO_NAMES.length]+(k>=DEMO_NAMES.length?'(2)':''),cls:'初一(3)班',sid:String(20260101+k),ans,ts:nowTs()-Math.floor(Math.random()*600000),demo:true});
+  }
+  saveSessions();renderCollect();toast(`已生成 ${n} 份模拟答卷（可演示，可一键清除）`,'ok');
+};
+
+/* ================================================================
+ * 统计分析引擎
+ * ================================================================ */
+function analyze(quiz,subs){
+  const autoIdx=quiz.questions.map((q,i)=>i).filter(i=>quiz.questions[i].type!=='text');
+  const full=quizFullScore(quiz);
+  const students=subs.map(sub=>{
+    let score=0;const perQ=[];
+    quiz.questions.forEach((q,i)=>{
+      const a=String(sub.ans[i]??'');
+      if(q.type==='text'){perQ.push({type:'text',ans:a,score:null});return}
+      const ok=a&&a===q.answer;
+      if(ok)score+=q.score;
+      perQ.push({type:q.type,ans:a,ok,score:ok?q.score:0});
+    });
+    return {id:sub.id,name:sub.name,cls:sub.cls,sid:sub.sid,ts:sub.ts,demo:sub.demo,score,rate:full?Math.round(score/full*100):0,perQ,ans:sub.ans,grade:sub.grade||{}};
+  }).sort((x,y)=>y.score-x.score||x.ts-y.ts);
+  students.forEach((s,i)=>s.rank=i+1);
+  const n=students.length;
+  const rates=students.map(s=>s.rate).sort((a,b)=>a-b);
+  const median=n? (n%2?rates[(n-1)/2]:Math.round((rates[n/2-1]+rates[n/2])/2)):0;
+  const overview={n,avg:n?(students.reduce((s,x)=>s+x.score,0)/n).toFixed(1):0,avgRate:n?Math.round(rates.reduce((s,x)=>s+x,0)/n):0,
+    passRate:n?Math.round(rates.filter(r=>r>=60).length/n*100):0,excelRate:n?Math.round(rates.filter(r=>r>=85).length/n*100):0,
+    max:n?students[0].score:0,min:n?rates[0]!==undefined?students[students.length-1].score:0:0,median,full};
+  const bands=[['<60%（待加强）',r=>r<60],['60~70%',r=>r>=60&&r<70],['70~80%',r=>r>=70&&r<80],['80~90%',r=>r>=80&&r<90],['≥90%（优秀）',r=>r>=90]]
+    .map(([label,f])=>({label,count:students.filter(s=>f(s.rate)).length}));
+  const qstats=quiz.questions.map((q,i)=>{
+    const answered=students.filter(s=>s.perQ[i].type!=='text');
+    const correct=answered.filter(s=>s.perQ[i].ok).length;
+    const optDist={};
+    if(q.type!=='text'){
+      q.options.forEach((_,j)=>optDist[QLETTERS[j]]=0);
+      answered.forEach(s=>{const a=String(s.ans[i]??'');if(a)[...a].forEach(c=>{if(c in optDist)optDist[c]++;else optDist[c]=1})});
+    }
+    return {i,type:q.type,stem:q.stem,kp:q.kp,scoreFull:q.score,answered:answered.length,correct,rate:answered.length?Math.round(correct/answered.length*100):0,optDist};
+  });
+  const kpMap={};
+  qstats.forEach(q=>{if(q.type==='text')return;const kp=q.kp||'未标注';kpMap[kp]=kpMap[kp]||{got:0,full:0};kpMap[kp].got+=q.rate;kpMap[kp].full+=100});
+  const kpStats=Object.entries(kpMap).map(([kp,v])=>({kp,rate:Math.round(v.got/v.full*100)})).sort((a,b)=>a.rate-b.rate);
+  return {students,overview,bands,qstats,kpStats,full,quiz};
+}
+
+/* ================================================================
+ * SVG 图表（免依赖，投影友好）
+ * ================================================================ */
+const CHART_COLORS=['#3b5bdb','#7048e8','#2f9e6e','#e8890c','#d64545','#0ca678','#1c7ed6','#f08c00'];
+function svgBar(items,{height=270,color='#3b5bdb',colorFn=null,max=null,unit='',labelFmt=null}={}){
+  const W=680,padL=46,padB=44,padT=30,padR=14;
+  const iw=W-padL-padR, ih=height-padT-padB;
+  const top=max??Math.max(1,...items.map(x=>x.v))*1.15;
+  const bw=Math.min(84,iw/items.length*0.62);
+  const gap=iw/items.length;
+  let bars='',labels='',vals='';
+  items.forEach((it,i)=>{
+    const x=padL+gap*i+(gap-bw)/2;
+    const bh=Math.max(it.v>0?3:0,ih*(it.v/top));
+    const y=padT+ih-bh;
+    const c=colorFn?colorFn(it,i):color;
+    bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="6" fill="${c}"/>`;
+    vals+=`<text x="${(x+bw/2).toFixed(1)}" y="${(y-7).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="#1c2333">${labelFmt?labelFmt(it):it.v}${unit}</text>`;
+    const lb=String(it.label||'');
+    labels+=`<text x="${(x+bw/2).toFixed(1)}" y="${height-16}" text-anchor="middle" font-size="${lb.length>6?11:12.5}" fill="#5a6478">${esc(lb.length>9?lb.slice(0,8)+'…':lb)}</text>`;
+  });
+  let grid='';
+  for(let g=0;g<=4;g++){const y=padT+ih-ih*g/4;grid+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#e9edf5"/><text x="${padL-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#9aa3b5">${Math.round(top*g/4)}</text>`}
+  return `<svg viewBox="0 0 ${W} ${height}" xmlns="http://www.w3.org/2000/svg">${grid}${bars}${vals}${labels}</svg>`;
+}
+function svgRadar(items){ // items: [{label, v(0-100)}]
+  const n=items.length;
+  if(n<3)return `<div style="color:var(--ink2);font-size:.88rem;padding:16px">知识点不足 3 个，无法绘制雷达图（请为题目设置「知识点标签」）。</div>`;
+  const W=520,H=460,cx=W/2,cy=H/2+8,R=150;
+  const pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+Math.cos(a)*r,cy+Math.sin(a)*r]};
+  let grid='';
+  for(let ring=1;ring<=4;ring++){
+    const pts=items.map((_,i)=>pt(i,R*ring/4).map(v=>v.toFixed(1)).join(',')).join(' ');
+    grid+=`<polygon points="${pts}" fill="none" stroke="#e3e8f2"/>`;
+  }
+  items.forEach((_,i)=>{const [x,y]=pt(i,R);grid+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#e3e8f2"/>`});
+  const valPts=items.map((it,i)=>pt(i,R*Math.max(0.03,it.v/100)).map(v=>v.toFixed(1)).join(',')).join(' ');
+  const labels=items.map((it,i)=>{const [x,y]=pt(i,R+30);
+    return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1c2333">${esc(it.label.length>7?it.label.slice(0,6)+'…':it.label)}</text><text x="${x.toFixed(1)}" y="${(y+15).toFixed(1)}" text-anchor="middle" font-size="11.5" fill="${it.v<60?'#d64545':'#2f9e6e'}" font-weight="700">${it.v}%</text>`}).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${grid}
+    <polygon points="${valPts}" fill="rgba(59,91,219,.18)" stroke="#3b5bdb" stroke-width="2.5"/>
+    ${items.map((it,i)=>{const[x,y]=pt(i,R*Math.max(0.03,it.v/100));return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="#3b5bdb"/>`}).join('')}
+    ${labels}</svg>`;
+}
+function svgHBar(rows,{unit='人'}={}){ // rows: [{label, v, max, color}]
+  const W=640,rh=40,padL=170,padR=60,H=rows.length*rh+16;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`+rows.map((r,i)=>{
+    const y=8+i*rh, w=Math.max(r.v>0?4:0,(W-padL-padR)*(r.max?r.v/r.max:0));
+    return `<text x="${padL-10}" y="${y+rh/2-4}" text-anchor="end" font-size="13" fill="#1c2333" font-weight="600">${esc(r.label)}</text>
+    <rect x="${padL}" y="${y+rh/2-19}" width="${W-padL-padR}" height="38" rx="9" fill="#eef1f8"/>
+    <rect x="${padL}" y="${y+rh/2-19}" width="${w.toFixed(1)}" height="38" rx="9" fill="${r.color||'#3b5bdb'}"/>
+    <text x="${padL+w+10}" y="${y+rh/2-2}" font-size="13" font-weight="700" fill="#1c2333">${r.v}${unit}</text>`;
+  }).join('')+`</svg>`;
+}
+
+/* ================================================================
+ * 统计分析视图
+ * ================================================================ */
+function renderAnaSelect(){
+  const sel=$('#anaSessionSel');
+  if(!sessions.length){sel.innerHTML='<option value="">—— 暂无收集场次（先去「发布收集」）——</option>';return}
+  sel.innerHTML=[...sessions].reverse().map(s=>`<option value="${sessionKey(s)}">${esc(s.name)} · ${fmtTs(s.publishedAt)} · ${s.subs.length}份</option>`).join('');
+}
+$('#btnRefreshAna').onclick=()=>{
+  // 会话对象可能被过滤，从 sessions 按 topic 找
+  renderAnalysis();toast('已刷新','ok');
+};
+$('#btnImportSession').onclick=()=>$('#anaSessionFile').click();
+$('#anaSessionFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const obj=JSON.parse(r.result);
+      if(obj.type!=='xueqing-session'||!obj.quiz)throw new Error('不是本系统的收集备份文件');
+      const s={topic:obj.topic||uid(8).toLowerCase(),quizId:obj.quiz.id,quiz:obj.quiz,publishedAt:obj.publishedAt||nowTs(),subs:obj.subs||[],lastTs:0,name:obj.quiz.title};
+      sessions.push(s);saveSessions();renderAnaSelect();renderAnalysis();toast('备份已导入并生成分析','ok');
+    }catch(err){toast('导入失败：'+err.message,'err')}
+  };
+  r.readAsText(f);e.target.value='';
+};
+function getSelSession(){
+  const key=$('#anaSessionSel').value;
+  return sessions.find(s=>sessionKey(s)===key)||sessions[sessions.length-1]||null;
+}
+function rateColor(r){return r>=80?'#2f9e6e':r>=60?'#e8890c':'#d64545'}
+function renderAnalysis(){
+  const s=getSelSession();
+  const body=$('#anaBody');
+  if(!s){body.innerHTML='<div class="card" style="color:var(--ink2)">暂无收集场次。请先在「发布收集」创建收集，或在上方导入备份 JSON。</div>';return}
+  if(!s.subs.length){body.innerHTML='<div class="card" style="color:var(--ink2)">该场次还没有答卷数据。可到「发布收集 → 实时收集面板」生成模拟答卷进行预演。</div>';return}
+  const A=analyze(s.quiz,s.subs);
+  const qLow=[...A.qstats].filter(q=>q.type!=='text'&&q.answered>0).sort((a,b)=>a.rate-b.rate).slice(0,3);
+  const demoN=s.subs.filter(x=>x.demo).length;
+  body.innerHTML=`
+  <div class="card no-print"><div class="row">
+    <b>${esc(s.name)}</b><span class="pill b">${fmtTs(s.publishedAt)} 发布</span>
+    ${demoN?`<span class="pill o">含${demoN}份模拟数据</span>`:''}
+    <div class="spacer"></div>
+    <button class="btn primary" id="btnPresent">🖥 投影大屏宣讲</button>
+    <button class="btn" id="btnOpenCollect2">📡 打开收集面板续收</button>
+    <button class="btn" id="btnExportDetail">⬇ 学生成绩明细 CSV</button>
+    <button class="btn" id="btnExportQStats">⬇ 题目统计 CSV</button>
+    <button class="btn" id="btnPrint">🖨 打印 / 存档报告</button>
+  </div></div>
+
+  <div class="grid4" style="margin-bottom:16px">
+    <div class="statcard"><div class="l">答卷人数</div><div class="v">${A.overview.n}</div><div class="s">客观题满分 ${A.full} 分</div></div>
+    <div class="statcard"><div class="l">平均得分</div><div class="v">${A.overview.avg}</div><div class="s">平均得分率 ${A.overview.avgRate}% · 中位数 ${A.overview.median}%</div></div>
+    <div class="statcard"><div class="l">及格率（≥60%）</div><div class="v" style="color:${rateColor(A.overview.passRate)}">${A.overview.passRate}%</div><div class="s">未达标 ${A.students.filter(x=>x.rate<60).length} 人</div></div>
+    <div class="statcard"><div class="l">优秀率（≥85%）</div><div class="v" style="color:#2f9e6e">${A.overview.excelRate}%</div><div class="s">最高 ${A.overview.max} 分 · 最低 ${A.overview.min} 分</div></div>
+  </div>
+
+  <div class="card charts-wrap"><h3><span class="dot"></span>分数段分布（按得分率）</h3>
+    ${svgBar(A.bands.map(b=>({label:b.label.split('（')[0],v:b.count})),{colorFn:(it,i)=>CHART_COLORS[i%CHART_COLORS.length],unit:'人'})}
+    <div class="legend"><span><i style="background:#3b5bdb"></i>人数分布</span><span>及格线＝得分率60% · 优秀线＝得分率85%</span></div></div>
+
+  <div class="grid2">
+    <div class="card charts-wrap"><h3><span class="dot"></span>知识点掌握度雷达</h3>${svgRadar(A.kpStats.map(k=>({label:k.kp,v:k.rate})))}
+      <div class="legend"><span style="color:var(--bad)">红色标签为薄弱知识点（&lt;60%）</span></div></div>
+    <div class="card charts-wrap"><h3><span class="dot"></span>题目正确率排行（低→高）</h3>
+      ${svgBar([...A.qstats].filter(q=>q.type!=='text').sort((a,b)=>a.rate-b.rate).map(q=>({label:'第'+(q.i+1)+'题',v:q.rate})),{colorFn:it=>rateColor(it.v),max:100,unit:'%'})}
+      <div class="legend"><span><i style="background:#2f9e6e"></i>掌握良好 ≥80%</span><span><i style="background:#e8890c"></i>需巩固 60~79%</span><span><i style="background:#d64545"></i>薄弱 &lt;60%</span></div></div>
+  </div>
+
+  <div class="card"><h3><span class="dot"></span>⚠ 建议重点讲解的题目（正确率最低 Top3）</h3>
+    ${qLow.length?qLow.map(q=>`<details class="exp"><summary>第 ${q.i+1} 题 · 正确率 <b style="color:${rateColor(q.rate)}">${q.rate}%</b> · 知识点：${esc(q.kp||'未标注')}</summary>
+      <div class="stemp" style="margin-top:10px">${esc(q.stem)}</div>
+      <div class="row" style="margin-top:10px">${Object.entries(q.optDist).map(([L,c])=>`<span class="pill ${L===s.quiz.questions[q.i].answer?'g':'gray'}">${L}：${c}人</span>`).join('')}${s.quiz.questions[q.i].answer?`<span class="pill b">正确答案 ${esc(s.quiz.questions[q.i].answer)}</span>`:''}</div>
+      <div style="margin-top:10px">${svgHBar(Object.entries(q.optDist).map(([L,c])=>({label:`选项 ${L}`,v:c,max:q.answered||1,color:L===s.quiz.questions[q.i].answer?'#2f9e6e':'#b9c2d8'})))}</div>
+    </details>`).join(''):'<div style="color:var(--ink2)">暂无客观题数据</div>'}
+  </div>
+
+  <div class="card"><h3><span class="dot"></span>学生个体诊断表（点击学生行可批改简答题）</h3>
+    <table class="tbl"><thead><tr><th>排名</th><th>姓名</th><th>学号</th><th>班级</th><th>得分</th><th>得分率</th><th>薄弱知识点</th><th>提交时间</th><th></th></tr></thead><tbody>
+    ${A.students.map(st=>{
+      const weakKp=[...new Set(st.perQ.map((p,i)=>p.ok===false?(A.quiz.questions[i].kp||'未标注'):null).filter(Boolean))];
+      return `<tr onclick="openGrade('${st.id}')" style="cursor:pointer">
+        <td><b>${st.rank}</b></td><td>${esc(st.name)}</td><td>${esc(st.sid)||'—'}</td><td>${esc(st.cls)||'—'}</td>
+        <td><b>${st.score}</b>/${A.full}</td><td><span class="pill ${st.rate>=85?'g':st.rate>=60?'o':'r'}">${st.rate}%</span></td>
+        <td style="max-width:220px">${weakKp.length?weakKp.map(k=>`<span class="pill r" style="margin-right:4px">${esc(k)}</span>`).join(''):'<span class="pill g">全对</span>'}</td>
+        <td>${fmtTs(st.ts)}</td><td class="no-print">${st.perQ.some(p=>p.type==='text')?'<span class="pill o">待批改</span>':''}</td></tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+  $('#btnPresent').onclick=()=>startPresent(A,s);
+  $('#btnOpenCollect2').onclick=()=>{curSession=s;startRecv(s);renderCollect();show('v-collect')};
+  $('#btnExportDetail').onclick=()=>exportDetailCSV(A,s);
+  $('#btnExportQStats').onclick=()=>exportQStatsCSV(A,s);
+  $('#btnPrint').onclick=()=>window.print();
+}
+function openGrade(stuId){
+  const s=getSelSession();if(!s)return;
+  const sub=s.subs.find(x=>x.id===stuId);if(!sub)return;
+  const A=analyze(s.quiz,s.subs);
+  const st=A.students.find(x=>x.id===stuId);
+  const textIdx=s.quiz.questions.map((q,i)=>i).filter(i=>s.quiz.questions[i].type==='text');
+  if(!textIdx.length){toast('该问卷没有简答题');return}
+  let html=`<div style="position:fixed;inset:0;background:rgba(20,25,40,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.remove()">
+    <div class="card" style="max-width:680px;width:100%;max-height:86vh;overflow:auto;margin:0">
+    <h3><span class="dot"></span>批改：${esc(st.name)}（学号 ${esc(st.sid)||'—'} · 客观题得分 ${st.score}/${A.full}）<div class="spacer"></div><button class="btn sm ghost" onclick="this.closest('div[style*=fixed]').remove()">✕ 关闭</button></h3>`;
+  textIdx.forEach(i=>{
+    const q=s.quiz.questions[i];
+    html+=`<div style="margin:10px 0"><div class="stemp" style="font-size:.92rem">第 ${i+1} 题（${q.score}分）${esc(q.stem)}</div>
+    <div style="background:#f7f9fd;border-radius:9px;padding:10px 14px;margin-top:8px;font-size:.9rem;white-space:pre-wrap">${esc(String(sub.ans[i]??'（未作答）'))}</div>
+    <div class="row" style="margin-top:6px"><label style="font-size:.85rem;color:var(--ink2)">给分：</label>
+    <input type="number" min="0" max="${q.score}" id="grade-${i}" value="${(sub.grade&&sub.grade[i]!=null)?sub.grade[i]:0}" style="width:80px"> / ${q.score}</div></div>`;
+  });
+  html+=`<div class="row" style="margin-top:8px"><div class="spacer"></div><button class="btn primary" id="btnSaveGrade">💾 保存批改</button></div></div></div>`;
+  const wrap=document.createElement('div');wrap.innerHTML=html;document.body.appendChild(wrap.firstChild);
+  $('#btnSaveGrade').onclick=()=>{
+    sub.grade=sub.grade||{};
+    textIdx.forEach(i=>{sub.grade[i]=+($('#grade-'+i).value)||0});
+    saveSessions();wrap.remove();renderAnalysis();toast('批改已保存（分析中自动并入总分）','ok');
+  };
+}
+/* CSV 导出 */
+function csvCell(v){v=String(v??'');return '"'+v.replace(/"/g,'""')+'"'}
+function exportDetailCSV(A,s){
+  const head=['排名','姓名','学号','班级','客观题得分','客观题满分','得分率(%)','简答得分','总分','提交时间',...A.quiz.questions.map((q,i)=>'第'+(i+1)+'题作答')];
+  const rows=A.students.map(st=>{
+    const textScore=st.grade?Object.values(st.grade).reduce((a,b)=>a+(+b||0),0):0;
+    return [st.rank,st.name,st.sid,st.cls,st.score,A.full,st.rate,textScore,st.score+textScore,fmtTs(st.ts),...A.quiz.questions.map((q,i)=>String(st.ans[i]??''))];
+  });
+  const csv=[head,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');
+  download(`${s.name}-学生成绩明细.csv`,csv,'text/csv');toast('成绩明细 CSV 已下载（Excel 可直接打开）','ok');
+}
+function exportQStatsCSV(A,s){
+  const head=['题号','题型','题干','知识点','分值','作答人数','答对人数','正确率(%)','选项分布','平均掌握评价'];
+  const rows=A.qstats.map(q=>[q.i+1,QTYPES[q.type],q.stem,q.kp,q.scoreFull,q.answered,q.correct,q.rate,
+    Object.entries(q.optDist).map(([L,c])=>L+':'+c).join(' '),q.rate>=80?'掌握良好':q.rate>=60?'需巩固':'薄弱']);
+  const csv=[head,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');
+  download(`${s.name}-题目统计.csv`,csv,'text/csv');toast('题目统计 CSV 已下载','ok');
+}
+
+/* ================================================================
+ * 大屏宣讲
+ * ================================================================ */
+let slides=[],slideIx=0;
+function startPresent(A,s){
+  const O=A.overview;
+  slides=[];
+  slides.push({title:`「${s.name}」学情总览`,sub:`${fmtTs(s.publishedAt)} 发布 · ${O.n} 份有效答卷`,html:`
+    <div class="bigcards">
+      <div class="statcard"><div class="l">平均得分率</div><div class="v" style="color:${rateColor(O.avgRate)}">${O.avgRate}%</div></div>
+      <div class="statcard"><div class="l">及格率</div><div class="v" style="color:${rateColor(O.passRate)}">${O.passRate}%</div></div>
+      <div class="statcard"><div class="l">优秀率</div><div class="v" style="color:#2f9e6e">${O.excelRate}%</div></div>
+      <div class="statcard"><div class="l">最高 / 最低</div><div class="v">${O.max} / ${O.min}<span style="font-size:1rem;color:var(--ink2)">分</span></div></div>
+      <div class="statcard"><div class="l">中位数得分率</div><div class="v">${O.median}%</div></div>
+    </div>`});
+  slides.push({title:'分数段分布',sub:'按客观题得分率统计',html:`<div class="charts-wrap">${svgBar(A.bands.map(b=>({label:b.label.split('（')[0],v:b.count})),{colorFn:(it,i)=>CHART_COLORS[i%CHART_COLORS.length],height:330,unit:'人'})}</div>`});
+  if(A.kpStats.length>=3)slides.push({title:'知识点掌握度',sub:'红色为需要重点补强的知识点',html:`<div class="charts-wrap">${svgRadar(A.kpStats.map(k=>({label:k.kp,v:k.rate})))}</div>`});
+  const qs=[...A.qstats].filter(q=>q.type!=='text'&&q.answered>0).sort((a,b)=>a.rate-b.rate);
+  if(qs.length)slides.push({title:'题目正确率排行',sub:'按正确率从低到高排列，重点关注红色题目',html:`<div class="charts-wrap">${svgBar(qs.map(q=>({label:'第'+(q.i+1)+'题',v:q.rate})),{colorFn:it=>rateColor(it.v),max:100,height:340,unit:'%'})}</div>`});
+  qs.slice(0,3).forEach(q=>{
+    const q0=A.quiz.questions[q.i];
+    slides.push({title:`重点讲解 · 第 ${q.i+1} 题`,sub:`正确率 ${q.rate}% · 知识点：${esc(q.kp||'未标注')}`,html:`
+      <div class="qslide"><div><div class="ratebig" style="color:${rateColor(q.rate)}">${q.rate}%</div>
+      <div class="stemp">${esc(q.stem)}</div>
+      <div class="opts" style="margin-top:14px">${q0.options.map((o,j)=>`<div class="optrow ${QLETTERS[j]===q0.answer?'sel':''}"><span class="lt">${QLETTERS[j]}</span><span>${esc(o)}</span><div class="spacer"></div><b>${(q.optDist[QLETTERS[j]]||0)}人</b></div>`).join('')}</div>
+      ${q0.answer?`<div style="margin-top:12px"><span class="pill g" style="font-size:1rem">✔ 正确答案：${esc(q0.answer)}</span></div>`:''}</div>
+      <div class="charts-wrap">${svgHBar(Object.entries(q.optDist).map(([L,c])=>({label:'选项 '+L,v:c,max:q.answered||1,color:L===q0.answer?'#2f9e6e':'#8fa3d9'})),{unit:'人'})}</div></div>`});
+  });
+  slideIx=0;
+  $('#present').classList.add('on');
+  document.body.style.overflow='hidden';
+  renderSlide();
+}
+function renderSlide(){
+  const st=$('#present-stage');
+  const s=slides[slideIx];if(!s)return;
+  st.innerHTML=`<div class="slide"><h1>${s.title}</h1><div class="slide-sub">${s.sub}</div>${s.html}
+  <div style="margin-top:26px;color:var(--ink2);font-size:.85rem;text-align:center">← → 方向键翻页 · F 全屏 · Esc 退出</div></div>`;
+  $('#slideInfo').textContent=(slideIx+1)+' / '+slides.length;
+}
+function presentNav(d){slideIx=Math.min(slides.length-1,Math.max(0,slideIx+d));renderSlide()}
+function endPresent(){$('#present').classList.remove('on');document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+$('#pfPrev').onclick=()=>presentNav(-1);
+$('#pfNext').onclick=()=>presentNav(1);
+$('#pfExit').onclick=endPresent;
+$('#pfFull').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else document.documentElement.requestFullscreen().catch(()=>toast('浏览器拒绝了全屏请求'))};
+document.addEventListener('keydown',e=>{
+  if(!$('#present').classList.contains('on'))return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();presentNav(1)}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();presentNav(-1)}
+  else if(e.key==='Home'){presentNav(-slides.length)}
+  else if(e.key==='End'){presentNav(slides.length)}
+  else if(e.key==='f'||e.key==='F'){$('#pfFull').click()}
+  else if(e.key==='Escape'){endPresent()}
+});
+
+/* ================================================================
+ * 学生端
+ * ================================================================ */
+let stu={topic:null,quiz:null,done:false};
+function parseHash(){
+  const h=location.hash.replace(/^#/,'');
+  const params=new URLSearchParams(h);
+  if(params.get('p')){try{const o=JSON.parse(b64uDecode(params.get('p')));return {topic:o.t,quiz:o.quiz?normalizeQuiz(o.quiz):null}}catch(e){return null}}
+  if(params.get('c')||params.get('t'))return {topic:params.get('c')||params.get('t'),quiz:null};
+  return null;
+}
+async function fetchMetaByTopic(topic){
+  // 自动重试 3 次（间隔 1.5s）：兼顾云端缓存落盘延迟（约1.5s）与网络波动
+  let lastErr=null;
+  for(let att=0;att<3;att++){
+    if(att)await new Promise(r=>setTimeout(r,1500));
+    try{
+      const evs=await NT.poll(topic,'all');
+      const msgs=evs.map(e=>{try{return JSON.parse(e.message)}catch(x){return null}}).filter(Boolean);
+      // 完整 meta
+      const metas=msgs.filter(m=>m.t==='meta');
+      if(metas.length)return normalizeQuiz(metas[metas.length-1].quiz);
+      // 组装 chunks
+      const chunkMsgs=msgs.filter(m=>m.t==='metaC');
+      const byKey={};
+      chunkMsgs.forEach(m=>{const k=m.qid+'_'+m.n;byKey[k]=byKey[k]||{};byKey[k][m.i]=m});
+      const keys=Object.keys(byKey).filter(k=>{const g=byKey[k];const n=g[0]?g[0].n:0;return Object.keys(g).length>=n&&n>0});
+      if(keys.length){const g=byKey[keys[keys.length-1]];const n=g[0].n;let s='';for(let i=0;i<n;i++)s+=g[i].c;
+        try{return normalizeQuiz(JSON.parse(s))}catch(e){}}
+    }catch(e){lastErr=e}
+  }
+  throw new Error(lastErr?('网络异常：'+lastErr.message):'未能从云端频道获取到问卷（可能尚未发布或已过期）');
+}
+function studentEntry(prefill){
+  stu={topic:prefill&&prefill.topic||null,quiz:prefill&&prefill.quiz||null,done:false};
+  const box=$('#stuBody');
+  box.innerHTML=`<div class="stu-head"><h2>🙋 我要答题</h2><p>输入老师提供的「会话码」，自动获取问卷开始作答</p></div>
+  <div class="card">
+    <label class="f">会话码</label>
+    <input type="text" id="stuCode" placeholder="如：wbxqk3m2xa" style="font-size:1.1rem;letter-spacing:2px;text-transform:lowercase" value="${esc(prefill&&prefill.topic||'')}">
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" id="stuGo" style="flex:1;justify-content:center">获取问卷并开始答题</button>
+    </div>
+    <div id="stuLoading" style="display:none;text-align:center;color:var(--ink2);font-size:.88rem;margin-top:12px">正在从云端获取问卷…</div>
+    <div id="stuErr" style="display:none;color:var(--bad);font-size:.88rem;margin-top:12px"></div>
+  </div>
+  <div class="card helpbox" style="font-size:.82rem">💡 会话码由老师发布时提供（扫描老师二维码会自动填入）。答卷将通过云端频道实时回传给老师。</div>`;
+  show('v-student');
+  $('#stuGo').onclick=async()=>{
+    const code=$('#stuCode').value.trim().toLowerCase();
+    if(!code){toast('请输入会话码','err');return}
+    $('#stuLoading').style.display='block';$('#stuErr').style.display='none';
+    try{
+      const quiz=stu.quiz&&(!code||code===stu.topic)?stu.quiz:await fetchMetaByTopic(code);
+      if(!quiz||!quiz.questions.length)throw new Error('问卷为空');
+      stu.quiz=quiz;stu.topic=code;renderStuQuiz();
+    }catch(e){
+      $('#stuLoading').style.display='none';
+      $('#stuErr').style.display='block';$('#stuErr').textContent='获取失败：'+e.message+'。请确认会话码是否正确、老师是否已发布，或稍后重试。';
+    }
+    $('#stuLoading').style.display='none';
+  };
+  if(prefill&&prefill.quiz){$('#stuGo').click()}
+  else if(prefill&&prefill.topic){$('#stuGo').click()}
+}
+function renderStuQuiz(){
+  const quiz=stu.quiz;
+  const box=$('#stuBody');
+  box.innerHTML=`<div class="stu-head"><h2>📝 ${esc(quiz.title)}</h2><p>${esc(quiz.desc||'')} · 共 ${quiz.questions.length} 题 · 提交后实时回传老师端</p></div>
+  <div class="card">
+    <div class="grid2">
+      <div><label class="f">姓名 *</label><input type="text" id="stuName" placeholder="你的姓名"></div>
+      <div><label class="f">学号</label><input type="text" id="stuSid" placeholder="学号（选填）"></div>
+    </div>
+    <div><label class="f">班级</label><input type="text" id="stuCls" placeholder="班级（选填，如：初一(3)班）"></div>
+    <div id="stuQs" style="margin-top:16px"></div>
+    <button class="btn primary" id="stuSubmit" style="width:100%;justify-content:center;padding:13px;font-size:1rem;margin-top:6px">✅ 提交答卷</button>
+    <div id="stuSubmitErr" style="color:var(--bad);font-size:.86rem;text-align:center;margin-top:8px"></div>
+  </div>`;
+  const qsBox=$('#stuQs');
+  qsBox.innerHTML=quiz.questions.map((q,i)=>{
+    let body='';
+    if(q.type==='text'){body=`<textarea class="ansText" data-qi="${i}" placeholder="在此输入你的回答…"></textarea>`}
+    else{
+      body=`<div class="opts" data-qi="${i}" data-multi="${q.type==='multi'?1:0}">`+q.options.map((o,j)=>
+        `<div class="optrow" data-l="${QLETTERS[j]}"><span class="lt">${QLETTERS[j]}</span><span>${esc(o)}</span></div>`).join('')+`</div>`;
+    }
+    return `<div class="qitem" style="background:#fff">
+      <div class="qhead"><span class="qnum">${i+1}</span><span class="pill gray">${QTYPES[q.type]}${q.type!=='text'?' · '+q.score+'分':''}</span>${q.kp?`<span class="kp-tag">${esc(q.kp)}</span>`:''}</div>
+      <div class="stemp">${esc(q.stem)}</div>${body}</div>`;
+  }).join('');
+  // 选项点选
+  $$('#stuQs .opts').forEach(g=>{
+    const multi=g.dataset.multi==='1';
+    g.querySelectorAll('.optrow').forEach(row=>row.addEventListener('click',()=>{
+      if(multi){row.classList.toggle('sel')}
+      else{g.querySelectorAll('.optrow').forEach(r=>r.classList.remove('sel'));row.classList.add('sel')}
+    }));
+  });
+  $('#stuSubmit').onclick=submitStudent;
+}
+function collectStuAnswers(){
+  const quiz=stu.quiz;const ans=[];
+  for(let i=0;i<quiz.questions.length;i++){
+    const q=quiz.questions[i];
+    if(q.type==='text'){ans.push($(`#stuQs textarea[data-qi="${i}"]`).value.trim())}
+    else{
+      const g=$(`#stuQs .opts[data-qi="${i}"]`);
+      const sel=[...g.querySelectorAll('.optrow.sel')].map(r=>r.dataset.l).sort().join('');
+      ans.push(sel);
+    }
+  }
+  return ans;
+}
+async function submitStudent(){
+  const name=$('#stuName').value.trim();
+  if(!name){toast('请填写姓名','err');$('#stuName').focus();return}
+  const quiz=stu.quiz;const ans=collectStuAnswers();
+  for(let i=0;i<quiz.questions.length;i++){
+    const q=quiz.questions[i];
+    if(q.type!=='text'&&!ans[i]){$(`#stuSubmitErr`).textContent=`第 ${i+1} 题尚未作答，请完成后提交。`;return}
+  }
+  const payload={t:'ans',id:uid(10),qid:quiz.id,name,sid:$('#stuSid').value.trim(),cls:$('#stuCls').value.trim(),ans,ts:nowTs()};
+  // 防重复提交提示
+  const key='xq_sub_'+stu.topic+'_'+quiz.id;
+  const prev=LS.get(key,null);
+  const btn=$('#stuSubmit');btn.disabled=true;btn.textContent='正在回传老师端…';
+  let ok=false,err=null;
+  try{await NT.pub(stu.topic,payload);ok=true}catch(e){err=e}
+  if(ok){
+    LS.set(key,{name,ts:payload.ts});
+    const box=$('#stuBody');
+    box.innerHTML=`<div class="stu-head"><h2>🎉 提交成功</h2><p>你的答卷已通过云端频道实时回传给老师</p></div>
+    <div class="card" style="text-align:center;padding:34px">
+      <div style="font-size:2.6rem">📡</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-top:10px">实时回传完成</div>
+      <div style="color:var(--ink2);font-size:.9rem;margin-top:8px">${esc(name)} · ${fmtTs(payload.ts)}<br>老师端将自动统计并生成学情分析</div>
+      <div class="row" style="justify-content:center;margin-top:18px">
+        <button class="btn ghost" onclick="location.reload()">返回首页</button>
+      </div></div>`;
+  }else{
+    const code=b64uEncode(JSON.stringify(payload));
+    const box=$('#stuBody');
+    box.innerHTML=`<div class="stu-head"><h2>⚠ 云端回传失败</h2><p>网络原因导致自动回传失败，请把下方「答卷码」交给老师导入</p></div>
+    <div class="card">
+      <div style="color:var(--bad);font-size:.9rem;margin-bottom:10px">失败原因：${esc(err&&err.message||'网络异常')}</div>
+      <label class="f">答卷码（复制发给老师）</label>
+      <textarea readonly style="font-family:monospace;font-size:.8rem;height:90px">${esc(code)}</textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="btnCopyAns">📋 复制答卷码</button>
+        <button class="btn" id="btnRetry">🔄 重试云端回传</button>
+      </div></div>`;
+    $('#btnCopyAns').onclick=()=>copyText(code);
+    $('#btnRetry').onclick=()=>{renderStuQuiz();/* 保留原填写内容不便，简化为重新填写 */toast('请重新填写并提交')};
+  }
+}
+
+/* ================================================================
+ * 帮助页（需求说明书）
+ * ================================================================ */
+$('#helpBody').innerHTML=`
+<h4>一、系统定位</h4>
+<div>面向课堂教学的<b>学情诊断与宣讲平台</b>：教师端制作/导入诊断问卷 → 学生扫码或凭会话码作答 → 答卷通过云端频道实时回传 → 系统自动统计并生成可视化分析 → 教师投影大屏宣讲 → 全过程数据可下载归档。</div>
+<h4>二、角色与核心功能</h4>
+<table><tr><th>角色</th><th>功能</th></tr>
+<tr><td><b>教师端</b></td><td>① 问卷管理：新建/编辑问卷（单选、多选、判断、简答四类题型，支持设置分值、标准答案、知识点标签），支持问卷 JSON 导入导出、示例问卷一键载入<br>
+② 发布收集：一键创建云端收集频道，自动生成<b>二维码 + 答题链接 + 会话码</b>三种学生入口<br>
+③ 实时收集：WebSocket 实时推送 + 周期补拉双保险，收卷情况实时可见；支持生成模拟答卷用于预演<br>
+④ 统计分析：班级平均分/及格率/优秀率、分数段分布、逐题正确率与选项分布、知识点掌握度雷达、学生个体诊断（薄弱知识点定位）<br>
+⑤ 大屏宣讲：全屏放映模式，方向键翻页，图表大字号投影友好<br>
+⑥ 数据下载：学生成绩明细 CSV、题目统计 CSV（Excel 可直接打开）、收集过程 JSON 备份/恢复、打印报告；简答题支持在线人工批改并计入总分</td></tr>
+<tr><td><b>学生端</b></td><td>扫码 / 点击链接 / 打开文件输会话码三种进入方式 → 填写姓名学号 → 作答（支持手机）→ 提交实时回传；网络异常时自动生成「答卷码」供教师导入兜底</td></tr></table>
+<h4>三、云端实时回传原理（免服务器）</h4>
+<div>系统使用公共消息频道服务 ntfy.sh：教师发布时创建一个随机会话码作为频道名，学生提交答卷即向频道推送一条 JSON 消息；教师端通过 WebSocket 订阅实时接收，并每 9 秒补拉一次云端缓存（消息缓存 12 小时），双重保障不漏收。整个过程<b>无需注册、无需密钥、无需自建服务器</b>。</div>
+<h4>四、学生如何进入答题（三种方式）</h4>
+<li><b>扫码</b>：教师填写「部署地址」后生成二维码，学生手机扫码直接进入。</li>
+<li><b>链接</b>：把答题链接发到班级群，学生点击进入。</li>
+<li><b>会话码（零部署）</b>：把本 HTML 文件通过微信/QQ 发给学生，学生手机打开文件 → 选「学生答题」→ 输入会话码即可自动从云端获取问卷。</li>
+<div style="margin-top:8px;color:var(--warn)"><b>关于部署地址：</b>二维码/链接需要本网页托管在一个学生手机能访问的网址上。可用 WorkBuddy 的「发布为应用」功能把本文件发布成在线链接后填入「发布收集 → 部署地址」；或放在学校服务器/任意静态托管上。没有部署条件时，用「会话码」方式即可完整使用全部功能。</div>
+<h4>五、学情诊断指标说明</h4>
+<li><b>得分率</b>＝个人得分 ÷ 客观题满分（简答题批改后另计，不计入自动得分率）。</li>
+<li><b>及格率</b>＝得分率 ≥60% 人数占比；<b>优秀率</b>＝得分率 ≥85% 人数占比。</li>
+<li><b>题目正确率</b>＝答对人数 ÷ 作答人数，&lt;60% 判为薄弱题并进入「重点讲解」。</li>
+<li><b>知识点掌握度</b>＝该知识点下各题正确率的加权均值，雷达图红色标注薄弱点。</li>
+<h4>六、数据安全与边界</h4>
+<li>会话码即频道名，仅持有会话码的人可收发该场次消息，请勿外泄；消息缓存约 12 小时后自动过期。</li>
+<li>所有数据由浏览器本地（localStorage）与云端频道共同承载，教师可随时导出 JSON/CSV 归档到本地。</li>
+<li>清空答卷、删除问卷等操作不可恢复，操作前请先备份。</li>`;
+
+/* ================================================================
+ * 启动
+ * ================================================================ */
+(function init(){
+  renderQuizList();
+  // 部署地址自动识别：部署在云端（http/https）且未填写过时，自动采用当前页面网址
+  if(!settings.host&&location.protocol.indexOf('http')===0){settings.host=location.origin+location.pathname;saveSettings()}
+  $('#hostInput').value=settings.host||'';
+  $('#hostInput').addEventListener('change',e=>{settings.host=e.target.value.trim();saveSettings()});
+  const hashData=parseHash();
+  if(hashData&&hashData.topic){studentEntry(hashData)}
+  else{show('v-quiz')}
+})();
+</script>
+</body>
+</html>
